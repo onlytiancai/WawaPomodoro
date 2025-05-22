@@ -23,12 +23,17 @@ public partial class PomodoroForm : Form
     // 托盘图标相关
     private NotifyIcon trayIcon;
     private ContextMenuStrip trayMenu;
+    private Icon tomatoIcon;
     
     public PomodoroForm()
     {
         InitializeComponent();
         
-        // 设置窗体标题和大小
+        // 创建番茄图标
+        tomatoIcon = TomatoIcon.CreateTomatoIcon();
+        
+        // 设置窗体图标和标题
+        this.Icon = tomatoIcon;
         this.Text = "番茄时钟";
         this.StartPosition = FormStartPosition.CenterScreen;
         
@@ -54,7 +59,7 @@ public partial class PomodoroForm : Form
         // 创建托盘图标
         trayIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application, // 使用应用程序默认图标
+            Icon = tomatoIcon, // 使用番茄图标
             Text = "番茄时钟",
             ContextMenuStrip = trayMenu,
             Visible = true
@@ -244,10 +249,15 @@ public partial class PomodoroForm : Form
     {
         if (disposing)
         {
-            // 确保在窗体销毁时清理托盘图标
+            // 确保在窗体销毁时清理托盘图标和图标资源
             if (trayIcon != null)
             {
                 trayIcon.Dispose();
+            }
+            
+            if (tomatoIcon != null)
+            {
+                tomatoIcon.Dispose();
             }
             
             if (components != null)
