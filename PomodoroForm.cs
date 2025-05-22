@@ -57,7 +57,7 @@ public partial class PomodoroForm : Form
     private void InitializeActivityTracker()
     {
         // 创建活动跟踪器，并设置非白名单进程激活时的回调
-        activityTracker = new ActivityTracker(OnDisallowedProcessActivated);
+        activityTracker = new ActivityTracker((processName, windowTitle, extra) => OnDisallowedProcessActivated(processName, windowTitle));
         
         // 添加一些默认的白名单进程
         activityTracker.AddAllowedProcess("devenv");     // Visual Studio
@@ -105,7 +105,7 @@ public partial class PomodoroForm : Form
         trayIcon.DoubleClick += OnTrayOpenClick;
     }
     
-    private void OnViewActivitiesClick(object sender, EventArgs e)
+    private void OnViewActivitiesClick(object? sender, EventArgs e)
     {
         // 显示活动记录窗口
         using (var activityForm = new ActivityForm(activityTracker))
@@ -114,14 +114,14 @@ public partial class PomodoroForm : Form
         }
     }
     
-    private void OnTrayOpenClick(object sender, EventArgs e)
+    private void OnTrayOpenClick(object? sender, EventArgs e)
     {
         this.Show();
         this.WindowState = FormWindowState.Normal;
         this.Activate();
     }
     
-    private void OnTrayExitClick(object sender, EventArgs e)
+    private void OnTrayExitClick(object? sender, EventArgs e)
     {
         // 确保在退出前清理托盘图标
         trayIcon.Visible = false;
@@ -147,7 +147,7 @@ public partial class PomodoroForm : Form
         }
     }
     
-    private void Timer_Tick(object sender, EventArgs e)
+    private void Timer_Tick(object? sender, EventArgs e)
     {
         if (remainingSeconds > 0)
         {
@@ -206,7 +206,7 @@ public partial class PomodoroForm : Form
             case TimerState.Work:
                 remainingSeconds = workTime;
                 // 开始工作时启动活动跟踪
-                activityTracker.Start();
+                activityTracker?.Start();
                 break;
             case TimerState.ShortBreak:
                 remainingSeconds = shortBreakTime;
@@ -304,9 +304,16 @@ public partial class PomodoroForm : Form
     private void btnActivity_Click(object sender, EventArgs e)
     {
         // 显示活动记录窗口
-        using (var activityForm = new ActivityForm(activityTracker))
+        if (activityTracker != null)
         {
-            activityForm.ShowDialog(this);
+            using (var activityForm = new ActivityForm(activityTracker))
+            {
+                activityForm.ShowDialog(this);
+            }
+        }
+        else
+        {
+            MessageBox.Show("活动跟踪器未初始化，无法显示活动记录。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
     
