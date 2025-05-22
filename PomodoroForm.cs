@@ -25,6 +25,9 @@ public partial class PomodoroForm : Form
     private ContextMenuStrip trayMenu;
     private Icon tomatoIcon;
     
+    // 活动跟踪器
+    private ActivityTracker activityTracker;
+    
     public PomodoroForm()
     {
         InitializeComponent();
@@ -44,8 +47,40 @@ public partial class PomodoroForm : Form
         // 初始化托盘图标
         InitializeTrayIcon();
         
+        // 初始化活动跟踪器
+        InitializeActivityTracker();
+        
         // 初始化显示
         UpdateDisplay();
+    }
+    
+    private void InitializeActivityTracker()
+    {
+        // 创建活动跟踪器，并设置非白名单进程激活时的回调
+        activityTracker = new ActivityTracker(OnDisallowedProcessActivated);
+        
+        // 添加一些默认的白名单进程
+        activityTracker.AddAllowedProcess("devenv");     // Visual Studio
+        activityTracker.AddAllowedProcess("Code");       // VS Code
+        activityTracker.AddAllowedProcess("notepad");    // 记事本
+        activityTracker.AddAllowedProcess("chrome");     // Chrome浏览器
+        activityTracker.AddAllowedProcess("msedge");     // Edge浏览器
+        activityTracker.AddAllowedProcess("firefox");    // Firefox浏览器
+        activityTracker.AddAllowedProcess("WawaPomodoro"); // 自身程序
+    }
+    
+    private void OnDisallowedProcessActivated(string processName, string windowTitle)
+    {
+        // 只有在工作状态下才提示
+        if (currentState == TimerState.Work)
+        {
+            trayIcon.ShowBalloonTip(
+                3000, 
+                "注意！", 
+                $"您正在使用非工作应用：{processName}\n{windowTitle}", 
+                ToolTipIcon.Warning
+            );
+        }
     }
     
     private void InitializeTrayIcon()
@@ -53,6 +88,7 @@ public partial class PomodoroForm : Form
         // 创建托盘菜单
         trayMenu = new ContextMenuStrip();
         trayMenu.Items.Add("打开主窗口", null, OnTrayOpenClick);
+        trayMenu.Items.Add("查看活动记录", null, OnViewActivitiesClick);
         trayMenu.Items.Add("-"); // 分隔线
         trayMenu.Items.Add("退出", null, OnTrayExitClick);
         
@@ -67,6 +103,15 @@ public partial class PomodoroForm : Form
         
         // 双击托盘图标显示主窗口
         trayIcon.DoubleClick += OnTrayOpenClick;
+    }
+    
+    private void OnViewActivitiesClick(object sender, EventArgs e)
+    {
+        // 显示活动记录窗口
+        using (var activityForm = new ActivityForm(activityTracker))
+        {
+            activityForm.ShowDialog(this);
+        }
     }
     
     private void OnTrayOpenClick(object sender, EventArgs e)
@@ -160,12 +205,18 @@ public partial class PomodoroForm : Form
         {
             case TimerState.Work:
                 remainingSeconds = workTime;
+                // 开始工作时启动活动跟踪
+                activityTracker.Start();
                 break;
             case TimerState.ShortBreak:
                 remainingSeconds = shortBreakTime;
+                // 休息时停止活动跟踪
+                activityTracker.Stop();
                 break;
             case TimerState.LongBreak:
                 remainingSeconds = longBreakTime;
+                // 休息时停止活动跟踪
+                activityTracker.Stop();
                 break;
         }
         
@@ -187,6 +238,10 @@ public partial class PomodoroForm : Form
     {
         timer.Stop();
         currentState = TimerState.Stopped;
+        
+        // 停止活动跟踪
+        activityTracker.Stop();
+        
         UpdateDisplay();
         trayIcon.Text = "番茄时钟 - 已暂停";
     }
@@ -213,6 +268,7 @@ public partial class PomodoroForm : Form
         // 更新按钮状态
         btnStart.Enabled = currentState == TimerState.Stopped;
         btnStop.Enabled = currentState != TimerState.Stopped;
+        btnActivity.Enabled = true; // 活动记录按钮始终可用
     }
     
     private void PlayAlarm()
@@ -243,6 +299,15 @@ public partial class PomodoroForm : Form
         completedPomodoros = 0;
         remainingSeconds = workTime;
         UpdateDisplay();
+    }
+    
+    private void btnActivity_Click(object sender, EventArgs e)
+    {
+        // 显示活动记录窗口
+        using (var activityForm = new ActivityForm(activityTracker))
+        {
+            activityForm.ShowDialog(this);
+        }
     }
     
     protected override void Dispose(bool disposing)

@@ -106,11 +106,25 @@ partial class PomodoroForm
         btnReset.Click += btnReset_Click;
         
         // 
+        // btnActivity
+        // 
+        btnActivity = new Button();
+        btnActivity.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+        btnActivity.Location = new Point(137, 280);
+        btnActivity.Name = "btnActivity";
+        btnActivity.Size = new Size(110, 30);
+        btnActivity.TabIndex = 7;
+        btnActivity.Text = "活动记录";
+        btnActivity.UseVisualStyleBackColor = true;
+        btnActivity.Click += btnActivity_Click;
+        
+        // 
         // PomodoroForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(384, 291);
+        ClientSize = new Size(384, 321);
+        Controls.Add(btnActivity);
         Controls.Add(btnReset);
         Controls.Add(btnStop);
         Controls.Add(btnStart);
@@ -135,4 +149,5 @@ partial class PomodoroForm
     private Button btnStart;
     private Button btnStop;
     private Button btnReset;
+    private Button btnActivity;
 }
