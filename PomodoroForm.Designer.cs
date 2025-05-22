@@ -1,24 +1,12 @@
 ﻿namespace WawaPomodoro;
 
-partial class Form1
+partial class PomodoroForm
 {
     /// <summary>
     ///  Required designer variable.
     /// </summary>
     private System.ComponentModel.IContainer components = null;
 
-    /// <summary>
-    ///  Clean up any resources being used.
-    /// </summary>
-    /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing && (components != null))
-        {
-            components.Dispose();
-        }
-        base.Dispose(disposing);
-    }
 
     #region Windows Form Designer generated code
 
@@ -118,7 +106,7 @@ partial class Form1
         btnReset.Click += btnReset_Click;
         
         // 
-        // Form1
+        // PomodoroForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
@@ -132,7 +120,7 @@ partial class Form1
         Controls.Add(lblTimeDisplay);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
-        Name = "Form1";
+        Name = "PomodoroForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "番茄时钟";
         ResumeLayout(false);
