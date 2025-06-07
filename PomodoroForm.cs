@@ -81,7 +81,7 @@ public partial class PomodoroForm : Form
             trayIcon.ShowBalloonTip(
                 3000, 
                 "注意！", 
-                $"您正在使用非工作应用：{processName}\n{windowTitle}", 
+                $"您正在使用非工作应用：\n进程：{processName}\n标题：{windowTitle}", 
                 ToolTipIcon.Warning
             );
         }

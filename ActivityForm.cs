@@ -121,6 +121,25 @@ namespace WawaPomodoro
 
             // Display summary data
             dataGridSummary.DataSource = summaryDt;
+            
+            // 添加右键菜单到进程统计表格
+            if (dataGridSummary.ContextMenuStrip == null)
+            {
+                ContextMenuStrip summaryContextMenu = new ContextMenuStrip();
+                summaryContextMenu.Items.Add("添加到白名单", null, (s, e) => {
+                    if (dataGridSummary.CurrentRow != null)
+                    {
+                        string processName = dataGridSummary.CurrentRow.Cells["进程"].Value.ToString();
+                        if (!string.IsNullOrEmpty(processName))
+                        {
+                            activityTracker.AddAllowedProcess(processName);
+                            LoadWhitelistData();
+                            MessageBox.Show($"已将 {processName} 添加到白名单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                });
+                dataGridSummary.ContextMenuStrip = summaryContextMenu;
+            }
         }
 
         private DateTime GetWeekStartDate(DateTime date)
