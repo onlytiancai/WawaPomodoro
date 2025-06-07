@@ -25,15 +25,24 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
       
-    - name: Publish
-      run: dotnet publish --configuration Release --output publish-output --self-contained true -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+    - name: Publish (Self-contained)
+      run: dotnet publish --configuration Release --output publish-output-self-contained --self-contained true -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+      
+    - name: Publish (Framework-dependent)
+      run: dotnet publish --configuration Release --output publish-output-framework-dependent --self-contained false -r win-x64 /p:PublishSingleFile=true
+      
+    - name: Rename executables
+      run: |
+        copy "publish-output-self-contained\WawaPomodoro.exe" "WawaPomodoro-standalone.exe"
+        copy "publish-output-framework-dependent\WawaPomodoro.exe" "WawaPomodoro-requires-dotnet.exe"
       
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          publish-output/WawaPomodoro.exe
+          WawaPomodoro-standalone.exe
+          WawaPomodoro-requires-dotnet.exe
         name: Release ${{ github.ref_name }}
         draft: false
         prerelease: false
