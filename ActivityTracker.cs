@@ -50,17 +50,18 @@ namespace WawaPomodoro
             trackingTimer = new System.Timers.Timer(1000); // Check every second
             trackingTimer.Elapsed += TrackingTimer_Elapsed;
             
-            // Set up log path
-            string appDataPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "WawaPomodoro");
-                
-            if (!Directory.Exists(appDataPath))
+            // 使用应用程序目录作为基础路径
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            
+            // 创建logs子目录
+            string logsDir = Path.Combine(baseDir, "logs");
+            if (!Directory.Exists(logsDir))
             {
-                Directory.CreateDirectory(appDataPath);
+                Directory.CreateDirectory(logsDir);
             }
             
-            logFilePath = Path.Combine(appDataPath, $"activity_{DateTime.Now:yyyy-MM-dd}.jsonl");
+            // 设置日志文件路径
+            logFilePath = Path.Combine(logsDir, $"activity_{DateTime.Now:yyyy-MM-dd}.jsonl");
             
             // Load settings
             LoadSettings();
@@ -254,10 +255,8 @@ namespace WawaPomodoro
         public List<ActivityRecord> LoadActivitiesForDate(DateTime date)
         {
             string dateStr = date.ToString("yyyy-MM-dd");
-            string filePath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "WawaPomodoro",
-                $"activity_{dateStr}.jsonl");
+            string logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            string filePath = Path.Combine(logsDir, $"activity_{dateStr}.jsonl");
                 
             List<ActivityRecord> records = new List<ActivityRecord>();
             
@@ -310,16 +309,8 @@ namespace WawaPomodoro
         {
             try
             {
-                string appDataPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "WawaPomodoro");
-                    
-                if (!Directory.Exists(appDataPath))
-                {
-                    Directory.CreateDirectory(appDataPath);
-                }
-                
-                string settingsPath = Path.Combine(appDataPath, "settings.json");
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string settingsPath = Path.Combine(baseDir, "settings.json");
                 
                 var settings = new
                 {
@@ -340,10 +331,8 @@ namespace WawaPomodoro
         {
             try
             {
-                string appDataPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "WawaPomodoro");
-                string settingsPath = Path.Combine(appDataPath, "settings.json");
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string settingsPath = Path.Combine(baseDir, "settings.json");
                 
                 if (File.Exists(settingsPath))
                 {

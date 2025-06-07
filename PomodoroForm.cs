@@ -63,14 +63,8 @@ public partial class PomodoroForm : Form
         // 创建活动跟踪器，并设置非白名单进程激活时的回调
         activityTracker = new ActivityTracker((processName, windowTitle, extra) => OnDisallowedProcessActivated(processName, windowTitle));
         
-        // 添加一些默认的白名单进程
-        activityTracker.AddAllowedProcess("devenv");     // Visual Studio
-        activityTracker.AddAllowedProcess("Code");       // VS Code
-        activityTracker.AddAllowedProcess("notepad");    // 记事本
-        activityTracker.AddAllowedProcess("chrome");     // Chrome浏览器
-        activityTracker.AddAllowedProcess("msedge");     // Edge浏览器
-        activityTracker.AddAllowedProcess("firefox");    // Firefox浏览器
-        activityTracker.AddAllowedProcess("WawaPomodoro"); // 自身程序
+        // 注意：默认白名单进程已经在ActivityTracker.LoadSettings()中处理
+        // 只有在没有配置文件时才会添加默认白名单
     }
     
     private void OnDisallowedProcessActivated(string processName, string windowTitle)
