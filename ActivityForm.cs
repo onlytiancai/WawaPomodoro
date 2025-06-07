@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -16,6 +18,12 @@ namespace WawaPomodoro
         {
             InitializeComponent();
             activityTracker = tracker;
+            
+            // 从嵌入资源加载图标
+            using (var stream = GetType().Assembly.GetManifestResourceStream("WawaPomodoro.app.ico"))
+            {
+                this.Icon = new Icon(stream);
+            }
             
             // Initialize date picker
             dateTimePicker.Value = DateTime.Today;

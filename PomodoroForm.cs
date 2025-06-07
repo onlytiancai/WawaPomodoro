@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace WawaPomodoro;
@@ -32,8 +33,11 @@ public partial class PomodoroForm : Form
     {
         InitializeComponent();
         
-        // 创建番茄图标
-        tomatoIcon = TomatoIcon.CreateTomatoIcon();
+        // 从嵌入资源加载图标
+        using (var stream = GetType().Assembly.GetManifestResourceStream("WawaPomodoro.app.ico"))
+        {
+            tomatoIcon = new Icon(stream);
+        }
         
         // 设置窗体图标和标题
         this.Icon = tomatoIcon;
