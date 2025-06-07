@@ -29,6 +29,8 @@ jobs:
       
     - name: Create Release
       id: create_release
+      permissions:
+        contents: write
       uses: softprops/action-gh-release@v1
       with:
         files: |
