@@ -6,14 +6,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Timers;
 
 namespace WawaPomodoro
 {
     public class ActivityTracker
     {
-        // Win32 API 调用
+        // Win32 API calls
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -23,12 +22,11 @@ namespace WawaPomodoro
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
-        // 活动记录
+        // Activity record
         public class ActivityRecord
         {
             public string ProcessName { get; set; }
             public string WindowTitle { get; set; }
-            public string Domain { get; set; }
             public DateTime StartTime { get; set; }
             public TimeSpan Duration { get; set; }
             public string Date => StartTime.ToString("yyyy-MM-dd");
@@ -38,21 +36,21 @@ namespace WawaPomodoro
         private List<ActivityRecord> activityHistory = new List<ActivityRecord>();
         private ActivityRecord currentActivity;
         private HashSet<string> allowedProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private HashSet<string> allowedDomains = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private HashSet<string> allowedTitleKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private Action<string, string, string> onDisallowedActivityActivated;
         private string logFilePath;
 
         public List<ActivityRecord> ActivityHistory => activityHistory;
         public HashSet<string> AllowedProcesses => allowedProcesses;
-        public HashSet<string> AllowedDomains => allowedDomains;
+        public HashSet<string> AllowedTitleKeywords => allowedTitleKeywords;
 
         public ActivityTracker(Action<string, string, string> disallowedActivityCallback)
         {
             onDisallowedActivityActivated = disallowedActivityCallback;
-            trackingTimer = new System.Timers.Timer(1000); // 每秒检查一次
+            trackingTimer = new System.Timers.Timer(1000); // Check every second
             trackingTimer.Elapsed += TrackingTimer_Elapsed;
             
-            // 设置日志文件路径
+            // Set up log path
             string appDataPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "WawaPomodoro");
@@ -64,10 +62,10 @@ namespace WawaPomodoro
             
             logFilePath = Path.Combine(appDataPath, $"activity_{DateTime.Now:yyyy-MM-dd}.jsonl");
             
-            // 加载配置
+            // Load settings
             LoadSettings();
             
-            // 加载当天的活动记录
+            // Load today's activities
             LoadTodayActivities();
         }
 
@@ -98,11 +96,11 @@ namespace WawaPomodoro
         {
             try
             {
-                // 获取当前活动窗口
+                // Get current active window
                 IntPtr hWnd = GetForegroundWindow();
                 if (hWnd == IntPtr.Zero) return;
 
-                // 获取进程ID和窗口标题
+                // Get process ID and name
                 uint processId;
                 GetWindowThreadProcessId(hWnd, out processId);
 
@@ -113,15 +111,12 @@ namespace WawaPomodoro
                 GetWindowText(hWnd, titleBuilder, titleBuilder.Capacity);
                 string windowTitle = titleBuilder.ToString();
                 
-                // 提取域名（如果是浏览器）
-                string domain = ExtractDomainFromTitle(processName, windowTitle);
-
-                // 检查是否是新的活动
+                // Check if activity has changed
                 if (currentActivity == null || 
                     currentActivity.ProcessName != processName || 
                     currentActivity.WindowTitle != windowTitle)
                 {
-                    // 保存之前的活动记录
+                    // Save previous activity
                     if (currentActivity != null)
                     {
                         currentActivity.Duration = DateTime.Now - currentActivity.StartTime;
@@ -129,208 +124,46 @@ namespace WawaPomodoro
                         SaveActivity(currentActivity);
                     }
 
-                    // 创建新的活动记录
+                    // Create new activity record
                     currentActivity = new ActivityRecord
                     {
                         ProcessName = processName,
                         WindowTitle = windowTitle,
-                        Domain = domain,
                         StartTime = DateTime.Now,
                         Duration = TimeSpan.Zero
                     };
 
-                    // 检查是否在白名单中
+                    // Check if process is allowed or title contains allowed keywords
                     bool isAllowed = allowedProcesses.Contains(processName);
                     
-                    // 如果是浏览器且有域名，检查域名是否在白名单中
-                    if (!isAllowed && !string.IsNullOrEmpty(domain))
+                    // If process is not allowed, check if title contains any allowed keywords
+                    if (!isAllowed && !string.IsNullOrEmpty(windowTitle))
                     {
-                        isAllowed = allowedDomains.Contains(domain);
+                        foreach (var keyword in allowedTitleKeywords)
+                        {
+                            if (windowTitle.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                            {
+                                isAllowed = true;
+                                break;
+                            }
+                        }
                     }
                     
                     if (!isAllowed && onDisallowedActivityActivated != null)
                     {
-                        onDisallowedActivityActivated(processName, windowTitle, domain);
+                        onDisallowedActivityActivated(processName, windowTitle, string.Empty);
                     }
                 }
                 else
                 {
-                    // 更新当前活动的持续时间
+                    // Update current activity duration
                     currentActivity.Duration = DateTime.Now - currentActivity.StartTime;
                 }
             }
             catch (Exception)
             {
-                // 忽略可能的异常，如进程已结束等
+                // Ignore errors to prevent crashes
             }
-        }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
-
-        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
-        private string ExtractDomainFromTitle(string processName, string windowTitle)
-        {
-            // 检查是否是常见浏览器
-            if (IsBrowser(processName))
-            {
-                // 尝试从浏览器地址栏获取URL
-                string url = GetBrowserUrl(processName);
-                if (!string.IsNullOrEmpty(url))
-                {
-                    try
-                    {
-                        // 从URL中提取域名
-                        Uri uri = new Uri(url);
-                        return uri.Host.ToLower();
-                    }
-                    catch
-                    {
-                        // 如果URL解析失败，尝试正则表达式提取
-                        string pattern = @"(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)";
-                        Match match = Regex.Match(url, pattern);
-                        if (match.Success)
-                        {
-                            return match.Groups[1].Value.ToLower();
-                        }
-                    }
-                }
-
-                // 如果无法从地址栏获取，回退到从标题提取
-                string titlePattern = @"(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+)";
-                Match titleMatch = Regex.Match(windowTitle, titlePattern);
-                if (titleMatch.Success)
-                {
-                    return titleMatch.Groups[1].Value.ToLower();
-                }
-                
-                // 尝试其他常见格式
-                titlePattern = @"(?:.+)(?:\s[-–—]\s)(?:.*?)([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)";
-                titleMatch = Regex.Match(windowTitle, titlePattern);
-                if (titleMatch.Success)
-                {
-                    return titleMatch.Groups[1].Value.ToLower();
-                }
-            }
-            return string.Empty;
-        }
-
-        private string GetBrowserUrl(string browserName)
-        {
-            try
-            {
-                // 获取所有该浏览器的进程
-                Process[] processes = Process.GetProcessesByName(browserName);
-                
-                foreach (Process process in processes)
-                {
-                    if (process.MainWindowHandle != IntPtr.Zero)
-                    {
-                        // 尝试查找地址栏
-                        string url = string.Empty;
-                        
-                        // 不同浏览器有不同的地址栏查找方法
-                        switch (browserName.ToLower())
-                        {
-                            case "chrome":
-                            case "msedge":
-                                url = GetChromeUrl(process.MainWindowHandle);
-                                break;
-                            case "firefox":
-                                url = GetFirefoxUrl(process.MainWindowHandle);
-                                break;
-                        }
-                        
-                        if (!string.IsNullOrEmpty(url))
-                        {
-                            return url;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // 忽略可能的异常
-            }
-            
-            return string.Empty;
-        }
-
-        private string GetChromeUrl(IntPtr mainWindowHandle)
-        {
-            // Chrome和Edge的地址栏通常是一个Edit控件
-            StringBuilder className = new StringBuilder(100);
-            IntPtr editHandle = IntPtr.Zero;
-            
-            // 查找所有子窗口，寻找地址栏
-            EnumChildWindows(mainWindowHandle, (hwnd, lParam) =>
-            {
-                GetClassName(hwnd, className, className.Capacity);
-                if (className.ToString() == "Chrome_OmniboxView")
-                {
-                    editHandle = hwnd;
-                    return false; // 停止枚举
-                }
-                return true; // 继续枚举
-            }, IntPtr.Zero);
-            
-            if (editHandle != IntPtr.Zero)
-            {
-                // 获取地址栏文本
-                StringBuilder urlText = new StringBuilder(2048);
-                GetWindowText(editHandle, urlText, urlText.Capacity);
-                return urlText.ToString();
-            }
-            
-            return string.Empty;
-        }
-
-        private string GetFirefoxUrl(IntPtr mainWindowHandle)
-        {
-            // Firefox的地址栏查找方法
-            StringBuilder className = new StringBuilder(100);
-            IntPtr editHandle = IntPtr.Zero;
-            
-            // 查找所有子窗口，寻找地址栏
-            EnumChildWindows(mainWindowHandle, (hwnd, lParam) =>
-            {
-                GetClassName(hwnd, className, className.Capacity);
-                if (className.ToString() == "MozillaWindowClass")
-                {
-                    // 在Firefox中继续查找地址栏
-                    IntPtr urlBarHandle = FindWindowEx(hwnd, IntPtr.Zero, "MozillaWindowClass", null);
-                    if (urlBarHandle != IntPtr.Zero)
-                    {
-                        editHandle = urlBarHandle;
-                        return false; // 停止枚举
-                    }
-                }
-                return true; // 继续枚举
-            }, IntPtr.Zero);
-            
-            if (editHandle != IntPtr.Zero)
-            {
-                // 获取地址栏文本
-                StringBuilder urlText = new StringBuilder(2048);
-                GetWindowText(editHandle, urlText, urlText.Capacity);
-                return urlText.ToString();
-            }
-            
-            return string.Empty;
-        }
-
-        private bool IsBrowser(string processName)
-        {
-            string[] browsers = { "chrome", "msedge", "firefox", "opera", "iexplore", "safari", "brave" };
-            return browsers.Contains(processName.ToLower());
         }
 
         public void AddAllowedProcess(string processName)
@@ -350,18 +183,18 @@ namespace WawaPomodoro
             }
         }
         
-        public void AddAllowedDomain(string domain)
+        public void AddAllowedTitleKeyword(string keyword)
         {
-            if (!string.IsNullOrWhiteSpace(domain))
+            if (!string.IsNullOrWhiteSpace(keyword))
             {
-                allowedDomains.Add(domain.ToLower());
+                allowedTitleKeywords.Add(keyword);
                 SaveSettings();
             }
         }
 
-        public void RemoveAllowedDomain(string domain)
+        public void RemoveAllowedTitleKeyword(string keyword)
         {
-            if (allowedDomains.Remove(domain.ToLower()))
+            if (allowedTitleKeywords.Remove(keyword))
             {
                 SaveSettings();
             }
@@ -381,7 +214,7 @@ namespace WawaPomodoro
             }
             catch
             {
-                // 忽略保存失败的错误
+                // Ignore file errors
             }
         }
         
@@ -406,7 +239,7 @@ namespace WawaPomodoro
                             }
                             catch
                             {
-                                // 忽略单行解析错误
+                                // Ignore parsing errors
                             }
                         }
                     }
@@ -414,7 +247,7 @@ namespace WawaPomodoro
             }
             catch
             {
-                // 忽略加载失败的错误
+                // Ignore file errors
             }
         }
         
@@ -447,7 +280,7 @@ namespace WawaPomodoro
                             }
                             catch
                             {
-                                // 忽略单行解析错误
+                                // Ignore parsing errors
                             }
                         }
                     }
@@ -455,7 +288,7 @@ namespace WawaPomodoro
             }
             catch
             {
-                // 忽略加载失败的错误
+                // Ignore file errors
             }
             
             return records;
@@ -491,7 +324,7 @@ namespace WawaPomodoro
                 var settings = new
                 {
                     AllowedProcesses = allowedProcesses.ToArray(),
-                    AllowedDomains = allowedDomains.ToArray()
+                    AllowedTitleKeywords = allowedTitleKeywords.ToArray()
                 };
                 
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
@@ -499,7 +332,7 @@ namespace WawaPomodoro
             }
             catch
             {
-                // 忽略保存失败的错误
+                // Ignore file errors
             }
         }
         
@@ -528,45 +361,40 @@ namespace WawaPomodoro
                             }
                         }
                         
-                        if (settings.AllowedDomains != null)
+                        if (settings.AllowedTitleKeywords != null)
                         {
-                            foreach (var domain in settings.AllowedDomains)
+                            foreach (var keyword in settings.AllowedTitleKeywords)
                             {
-                                allowedDomains.Add(domain.ToLower());
+                                allowedTitleKeywords.Add(keyword);
                             }
                         }
                     }
                 }
                 else
                 {
-                    // 添加默认白名单
+                    // Default allowed processes
                     allowedProcesses.Add("devenv");     // Visual Studio
                     allowedProcesses.Add("Code");       // VS Code
-                    allowedProcesses.Add("notepad");    // 记事本
-                    allowedProcesses.Add("chrome");     // Chrome浏览器
-                    allowedProcesses.Add("msedge");     // Edge浏览器
-                    allowedProcesses.Add("firefox");    // Firefox浏览器
-                    allowedProcesses.Add("WawaPomodoro"); // 自身程序
+                    allowedProcesses.Add("notepad");    // Notepad
+                    allowedProcesses.Add("chrome");     // Chrome browser
+                    allowedProcesses.Add("msedge");     // Edge browser
+                    allowedProcesses.Add("firefox");    // Firefox browser
+                    allowedProcesses.Add("WawaPomodoro"); // This app
                     
-                    // 添加默认域名白名单
-                    allowedDomains.Add("github.com");
-                    allowedDomains.Add("stackoverflow.com");
-                    allowedDomains.Add("docs.microsoft.com");
-                    
-                    // 保存默认设置
+                    // Save default settings
                     SaveSettings();
                 }
             }
             catch
             {
-                // 忽略加载失败的错误，使用空白名单
+                // Ignore file errors, use default allowed processes
             }
         }
         
         private class SettingsData
         {
             public string[] AllowedProcesses { get; set; }
-            public string[] AllowedDomains { get; set; }
+            public string[] AllowedTitleKeywords { get; set; }
         }
     }
 }

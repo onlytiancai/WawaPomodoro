@@ -41,21 +41,20 @@ namespace WawaPomodoro
             dataGridActivities = new DataGridView();
             tabPageSummary = new TabPage();
             dataGridSummary = new DataGridView();
-            tabPageDomains = new TabPage();
-            dataGridDomains = new DataGridView();
             tabPageWhitelist = new TabPage();
             groupBox2 = new GroupBox();
-            btnRemoveFromDomainWhitelist = new Button();
-            btnAddToDomainWhitelist = new Button();
-            txtDomainName = new TextBox();
+            btnRemoveFromTitleWhitelist = new Button();
+            btnAddToTitleWhitelist = new Button();
+            txtTitleKeyword = new TextBox();
             label2 = new Label();
-            listBoxDomainWhitelist = new ListBox();
+            listBoxTitleWhitelist = new ListBox();
             groupBox1 = new GroupBox();
             btnRemoveFromProcessWhitelist = new Button();
             btnAddToProcessWhitelist = new Button();
             txtProcessName = new TextBox();
             label1 = new Label();
             listBoxProcessWhitelist = new ListBox();
+
             
             // 
             // tabControl1
@@ -63,7 +62,6 @@ namespace WawaPomodoro
             tabControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tabControl1.Controls.Add(tabPageActivities);
             tabControl1.Controls.Add(tabPageSummary);
-            tabControl1.Controls.Add(tabPageDomains);
             tabControl1.Controls.Add(tabPageWhitelist);
             tabControl1.Location = new Point(12, 12);
             tabControl1.Name = "tabControl1";
@@ -205,7 +203,7 @@ namespace WawaPomodoro
             tabPageSummary.Padding = new Padding(3);
             tabPageSummary.Size = new Size(752, 509);
             tabPageSummary.TabIndex = 1;
-            tabPageSummary.Text = "进程时间汇总";
+            tabPageSummary.Text = "进程统计";
             tabPageSummary.UseVisualStyleBackColor = true;
             
             // 
@@ -224,32 +222,6 @@ namespace WawaPomodoro
             dataGridSummary.TabIndex = 0;
             
             // 
-            // tabPageDomains
-            // 
-            tabPageDomains.Controls.Add(dataGridDomains);
-            tabPageDomains.Location = new Point(4, 24);
-            tabPageDomains.Name = "tabPageDomains";
-            tabPageDomains.Size = new Size(752, 509);
-            tabPageDomains.TabIndex = 3;
-            tabPageDomains.Text = "域名时间汇总";
-            tabPageDomains.UseVisualStyleBackColor = true;
-            
-            // 
-            // dataGridDomains
-            // 
-            dataGridDomains.AllowUserToAddRows = false;
-            dataGridDomains.AllowUserToDeleteRows = false;
-            dataGridDomains.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridDomains.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridDomains.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridDomains.Location = new Point(6, 6);
-            dataGridDomains.Name = "dataGridDomains";
-            dataGridDomains.ReadOnly = true;
-            dataGridDomains.RowTemplate.Height = 25;
-            dataGridDomains.Size = new Size(740, 497);
-            dataGridDomains.TabIndex = 1;
-            
-            // 
             // tabPageWhitelist
             // 
             tabPageWhitelist.Controls.Add(groupBox2);
@@ -264,47 +236,47 @@ namespace WawaPomodoro
             // 
             // groupBox2
             // 
-            groupBox2.Controls.Add(btnRemoveFromDomainWhitelist);
-            groupBox2.Controls.Add(btnAddToDomainWhitelist);
-            groupBox2.Controls.Add(txtDomainName);
+            groupBox2.Controls.Add(btnRemoveFromTitleWhitelist);
+            groupBox2.Controls.Add(btnAddToTitleWhitelist);
+            groupBox2.Controls.Add(txtTitleKeyword);
             groupBox2.Controls.Add(label2);
-            groupBox2.Controls.Add(listBoxDomainWhitelist);
+            groupBox2.Controls.Add(listBoxTitleWhitelist);
             groupBox2.Location = new Point(376, 6);
             groupBox2.Name = "groupBox2";
             groupBox2.Size = new Size(370, 497);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
-            groupBox2.Text = "域名白名单";
+            groupBox2.Text = "标题关键词白名单";
             
             // 
-            // btnRemoveFromDomainWhitelist
+            // btnRemoveFromTitleWhitelist
             // 
-            btnRemoveFromDomainWhitelist.Location = new Point(289, 93);
-            btnRemoveFromDomainWhitelist.Name = "btnRemoveFromDomainWhitelist";
-            btnRemoveFromDomainWhitelist.Size = new Size(75, 23);
-            btnRemoveFromDomainWhitelist.TabIndex = 4;
-            btnRemoveFromDomainWhitelist.Text = "移除";
-            btnRemoveFromDomainWhitelist.UseVisualStyleBackColor = true;
-            btnRemoveFromDomainWhitelist.Click += btnRemoveFromDomainWhitelist_Click;
+            btnRemoveFromTitleWhitelist.Location = new Point(289, 93);
+            btnRemoveFromTitleWhitelist.Name = "btnRemoveFromTitleWhitelist";
+            btnRemoveFromTitleWhitelist.Size = new Size(75, 23);
+            btnRemoveFromTitleWhitelist.TabIndex = 4;
+            btnRemoveFromTitleWhitelist.Text = "删除";
+            btnRemoveFromTitleWhitelist.UseVisualStyleBackColor = true;
+            btnRemoveFromTitleWhitelist.Click += btnRemoveFromTitleWhitelist_Click;
             
             // 
-            // btnAddToDomainWhitelist
+            // btnAddToTitleWhitelist
             // 
-            btnAddToDomainWhitelist.Location = new Point(289, 64);
-            btnAddToDomainWhitelist.Name = "btnAddToDomainWhitelist";
-            btnAddToDomainWhitelist.Size = new Size(75, 23);
-            btnAddToDomainWhitelist.TabIndex = 3;
-            btnAddToDomainWhitelist.Text = "添加";
-            btnAddToDomainWhitelist.UseVisualStyleBackColor = true;
-            btnAddToDomainWhitelist.Click += btnAddToDomainWhitelist_Click;
+            btnAddToTitleWhitelist.Location = new Point(289, 64);
+            btnAddToTitleWhitelist.Name = "btnAddToTitleWhitelist";
+            btnAddToTitleWhitelist.Size = new Size(75, 23);
+            btnAddToTitleWhitelist.TabIndex = 3;
+            btnAddToTitleWhitelist.Text = "添加";
+            btnAddToTitleWhitelist.UseVisualStyleBackColor = true;
+            btnAddToTitleWhitelist.Click += btnAddToTitleWhitelist_Click;
             
             // 
-            // txtDomainName
+            // txtTitleKeyword
             // 
-            txtDomainName.Location = new Point(289, 35);
-            txtDomainName.Name = "txtDomainName";
-            txtDomainName.Size = new Size(75, 23);
-            txtDomainName.TabIndex = 2;
+            txtTitleKeyword.Location = new Point(289, 35);
+            txtTitleKeyword.Name = "txtTitleKeyword";
+            txtTitleKeyword.Size = new Size(75, 23);
+            txtTitleKeyword.TabIndex = 2;
             
             // 
             // label2
@@ -312,19 +284,19 @@ namespace WawaPomodoro
             label2.AutoSize = true;
             label2.Location = new Point(289, 17);
             label2.Name = "label2";
-            label2.Size = new Size(44, 15);
+            label2.Size = new Size(56, 15);
             label2.TabIndex = 1;
-            label2.Text = "域名：";
+            label2.Text = "关键词：";
             
             // 
-            // listBoxDomainWhitelist
+            // listBoxTitleWhitelist
             // 
-            listBoxDomainWhitelist.FormattingEnabled = true;
-            listBoxDomainWhitelist.ItemHeight = 15;
-            listBoxDomainWhitelist.Location = new Point(6, 22);
-            listBoxDomainWhitelist.Name = "listBoxDomainWhitelist";
-            listBoxDomainWhitelist.Size = new Size(277, 469);
-            listBoxDomainWhitelist.TabIndex = 0;
+            listBoxTitleWhitelist.FormattingEnabled = true;
+            listBoxTitleWhitelist.ItemHeight = 15;
+            listBoxTitleWhitelist.Location = new Point(6, 22);
+            listBoxTitleWhitelist.Name = "listBoxTitleWhitelist";
+            listBoxTitleWhitelist.Size = new Size(277, 469);
+            listBoxTitleWhitelist.TabIndex = 0;
             
             // 
             // groupBox1
@@ -348,7 +320,7 @@ namespace WawaPomodoro
             btnRemoveFromProcessWhitelist.Name = "btnRemoveFromProcessWhitelist";
             btnRemoveFromProcessWhitelist.Size = new Size(75, 23);
             btnRemoveFromProcessWhitelist.TabIndex = 4;
-            btnRemoveFromProcessWhitelist.Text = "移除";
+            btnRemoveFromProcessWhitelist.Text = "删除";
             btnRemoveFromProcessWhitelist.UseVisualStyleBackColor = true;
             btnRemoveFromProcessWhitelist.Click += btnRemoveFromProcessWhitelist_Click;
             
@@ -420,19 +392,17 @@ namespace WawaPomodoro
         private Button btnRemoveFromProcessWhitelist;
         private Button btnAddToProcessWhitelist;
         private TextBox txtProcessName;
-        private GroupBox groupBox2;
-        private Button btnRemoveFromDomainWhitelist;
-        private Button btnAddToDomainWhitelist;
-        private TextBox txtDomainName;
-        private Label label2;
-        private ListBox listBoxDomainWhitelist;
         private DateTimePicker dateTimePicker;
         private RadioButton rbMonth;
         private RadioButton rbWeek;
         private RadioButton rbDay;
         private Label lblDateRange;
         private Panel panel1;
-        private TabPage tabPageDomains;
-        private DataGridView dataGridDomains;
+        private GroupBox groupBox2;
+        private Button btnRemoveFromTitleWhitelist;
+        private Button btnAddToTitleWhitelist;
+        private TextBox txtTitleKeyword;
+        private Label label2;
+        private ListBox listBoxTitleWhitelist;
     }
 }
