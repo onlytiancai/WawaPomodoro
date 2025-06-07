@@ -8,7 +8,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    
+    permissions:
+      contents: write    
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -29,8 +30,6 @@ jobs:
       
     - name: Create Release
       id: create_release
-      permissions:
-        contents: write
       uses: softprops/action-gh-release@v1
       with:
         files: |
